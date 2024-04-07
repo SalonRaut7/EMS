@@ -1,3 +1,4 @@
+SQL Queries:
 -- Table for employee credentials
 CREATE TABLE employee_credentials (
     id SERIAL PRIMARY KEY,
