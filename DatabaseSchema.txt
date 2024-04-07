@@ -1,0 +1,47 @@
+-- Table for employee credentials
+CREATE TABLE employee_credentials (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- Table for admin credentials
+CREATE TABLE admin_credentials (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(50) NOT NULL
+);
+
+-- Table for attendance
+CREATE TABLE attendance (
+    employeeid INTEGER NOT NULL,
+    date DATE NOT NULL,
+    status VARCHAR(10),
+    PRIMARY KEY (employeeid, date),
+    FOREIGN KEY (employeeid) REFERENCES employees (employeeid)
+);
+
+-- Table for departments
+CREATE TABLE departments (
+    departmentid INTEGER PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+-- Table for employees
+CREATE TABLE employees (
+    employeeid INTEGER PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    department VARCHAR(100),
+    jobtitle VARCHAR(100)
+);
+
+-- Table for salary
+CREATE TABLE salary (
+    salaryid SERIAL PRIMARY KEY,
+    employeeid INTEGER,
+    amount NUMERIC(10,2),
+    date DATE,
+    FOREIGN KEY (employeeid) REFERENCES employees (employeeid)
+);
