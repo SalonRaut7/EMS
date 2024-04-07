@@ -1,185 +1,113 @@
-import psycopg2
 import streamlit as st
+import psycopg2
+from admin_interface import render_admin_interface
+from admin_login import admin_login
+from employee_interface import member_signup_page,show_member_page
+from employee_functions import member_login
 
-# Connect to PostgreSQL database
-conn = psycopg2.connect(
-    dbname='FinalProjectDBMS',
-    user='postgres',
-    password='salonraut',
-    host='localhost',
-    port=5432
-)
-cursor = conn.cursor()
+header_section = st.container()
+main_section = st.container()
+login_section = st.container()
+logout_section = st.container()
+
+# Function to establish a database connection
+def connect_to_database():
+    try:
+        # Connect to PostgreSQL database
+        conn = psycopg2.connect(
+            dbname='FinalProjectDBMS',
+            user='postgres',
+            password='salonraut',
+            host='localhost',
+            port=5432
+        )
+        return conn
+    except psycopg2.Error as e:
+        st.error("Error connecting to PostgreSQL database: {}".format(e))
+
+def show_main_page():
+    with main_section:
+        st.title("Welcome to Employee Management System")
+        st.write("Here, you can manage employees, departments, salaries, and attendance.")
+        render_admin_interface(cursor, conn)
+
+def logged_out_clicked():
+    st.session_state['logged_in'] = False
+    if 'member_id' in st.session_state:
+        del st.session_state['member_id']
+    update_page_state('login')
+
+def show_logout_page():
+    login_section.empty()
+    with logout_section:
+        st.button("Log Out", key="logout", on_click=logged_out_clicked)
+
+def admin_logged_in_clicked(username, password):
+    if admin_login(cursor, username, password):
+        st.session_state['logged_in'] = True
+        update_page_state('main')
+    else:
+        st.error("Invalid admin username or password")
+
+def member_logged_in_clicked(username, password):
+    member_id = member_login(cursor, username, password)
+    if member_id:
+        st.session_state['logged_in'] = True
+        st.session_state['member_id'] = member_id
+        update_page_state('member')
+    else:
+        st.error("Invalid member username or password")
+
+def show_login_page():
+    st.title("Welcome to Employee Management System")  
+    st.write("Please log in to access the system.")  
+    with login_section:
+        if not st.session_state.get('logged_in', False):
+            user_type = st.radio("Login as", ["Admin", "Member"])
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            if user_type == "Admin":
+                st.button("Login as Admin", on_click=admin_logged_in_clicked, args=(username, password))
+            else:
+                st.button("Login as Member", on_click=member_logged_in_clicked, args=(username, password))
+                st.write("Not a member?")
+                st.button("Sign Up", on_click=update_page_state, args=('signup',))
+
+# def update_page_state(new_page):
+#     st.session_state['page'] = new_page
+def update_page_state(new_page):
+    st.session_state['page'] = new_page
+    if new_page != 'signup':
+        st.session_state['show_signup'] = False
+
+
+def reset_page_state():
+    st.session_state['page'] = 'login'
+    if 'signup_success' in st.session_state:
+        del st.session_state['signup_success']
 
 def main():
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
+    global conn, cursor
 
-    if not st.session_state.authenticated:
-        admin_login()
-    else:
-        render_admin_interface()
+    conn = connect_to_database()
+    if conn is not None:
+        cursor = conn.cursor()
 
-def admin_login():
-    st.title("Employee Management System")
-    st.subheader("Admin Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    login_button = st.button("Login")
-    login_feedback = st.empty()
-
-    if login_button:
-        if username == 'admin' and password == 'admin123':
-            st.session_state.authenticated = True
-            login_feedback.success("Login successful")
-            st.subheader("Admin Interface")
-            # Clear login form and feedback messages
-            username = ''
-            password = ''
-            login_feedback.empty()
-            render_admin_interface()
-        else:
-            login_feedback.error("Invalid username or password")
-
-
-
-def render_admin_interface():
-    menu = st.sidebar.selectbox('Select an Operation', ('View Employees', 'Add Employee', 'View Departments', 'Add Department', 'View Salary', 'Add Salary', 'View Attendance', 'Add Attendance'))
-
-    if menu == "View Employees":
-        st.subheader("View Employees")
-        cursor.execute("SELECT * FROM Employees")
-        employees = cursor.fetchall()
-        for employee in employees:
-            st.write("EmployeeID:", employee[0])
-            st.write("Name:", employee[1])
-            st.write("Email:", employee[2])
-            st.write("Department:", employee[3])
-            st.write("Job Title:", employee[4])
-            st.write("-----------------------------------")
-
-
-    elif menu == "Add Employee":
-        st.subheader("Add Employee")
-        employee_id = st.number_input("Employee ID")
-        name = st.text_input("Name")
-        email = st.text_input("Email")
-        department = st.text_input("Department")
-        job_title = st.text_input("Job Title")
-        if st.button("Add"):
-            cursor.execute("INSERT INTO Employees (EmployeeID, Name, Email, Department, JobTitle) VALUES (%s, %s, %s, %s, %s)", (employee_id, name, email, department, job_title))
-            conn.commit()
-            st.success("Employee added successfully")
-
-    elif menu == "View Departments":
-        st.subheader("View Departments")
-        cursor.execute("SELECT * FROM Departments")
-        departments = cursor.fetchall()
-        for department in departments:
-            st.write("Department ID:", department[0])
-            st.write("Department Name:", department[1])
-            st.write("-----------------------------------")
-
-
-
-    elif menu == "Add Department":
-        st.subheader("Add Department")
-        department_id = st.number_input("Department ID")
-        name = st.text_input("Name")
-        if st.button("Add"):
-            cursor.execute("INSERT INTO Departments (DepartmentID, Name) VALUES (%s, %s)", (department_id, name))
-            conn.commit()
-            st.success("Department added successfully")
-
-    elif menu == "View Salary":
-        st.subheader("View Salary Records")
-        cursor.execute("SELECT s.EmployeeID, e.Name, s.Amount, s.Date FROM Salary s JOIN Employees e ON s.EmployeeID = e.EmployeeID")
-        salary_records = cursor.fetchall()
-        for record in salary_records:
-            st.write("EmployeeID:", record[0])
-            st.write("Employee Name:", record[1])
-            st.write("Amount:", record[2])
-            st.write("Date:", record[3])
-            st.write("-----------------------------------")
-
-
-
-    elif menu == "Add Salary":
-        st.subheader("Add Salary Record")
-        employee_id = st.number_input("Employee ID")
-        amount = st.number_input("Amount")
-        date = st.date_input("Date")
-        if st.button("Add"):
-            cursor.execute("INSERT INTO Salary (EmployeeID, Amount, Date) VALUES (%s, %s, %s)", (employee_id, amount, date))
-            conn.commit()
-            st.success("Salary record added successfully")
-
-    elif menu == "View Attendance":
-        st.subheader("View Attendance Records")
-        cursor.execute("SELECT a.EmployeeID, e.Name, a.Date, a.Status FROM Attendance a JOIN Employees e ON a.EmployeeID = e.EmployeeID")
-        attendance_records = cursor.fetchall()
-        for record in attendance_records:
-            st.write("EmployeeID:", record[0])
-            st.write("Employee Name:", record[1])
-            st.write("Date:", record[2])
-            st.write("Status:", record[3])
-            st.write("-----------------------------------")
-
-
-
-    elif menu == "Add Attendance":
-        st.subheader("Add Attendance Record")
-        employee_id = st.number_input("Employee ID")
-        date = st.date_input("Date")
-        status = st.selectbox("Status", ["Present", "Absent"])
-        if st.button("Add"):
-            cursor.execute("INSERT INTO Attendance (EmployeeID, Date, Status) VALUES (%s, %s, %s)", (employee_id, date, status))
-            conn.commit()
-            st.success("Attendance record added successfully")
-
-def render_employee_interface():
-    st.subheader("Employee Interface")
-
-    # Get employee ID
-    employee_id = st.number_input("Enter Employee ID")
-
-    # Display employee details based on ID
-    try:
-        cursor.execute("SELECT * FROM Employees WHERE EmployeeID = %s", (employee_id,))
-        employee = cursor.fetchone()
-        if employee:
-            st.write("Name:", employee[1])
-            st.write("Email:", employee[2])
-            st.write("Department:", employee[3])
-            st.write("Job Title:", employee[4])
-            display_employee_salary(employee_id)
-            display_employee_attendance(employee_id)
-        else:
-            st.error("Employee not found")
-    except psycopg2.Error as e:
-        st.error(f"Error fetching employee details: {e}")
-
-def display_employee_salary(employee_id):
-    # Display employee salary based on ID
-    try:
-        cursor.execute("SELECT * FROM Salary WHERE EmployeeID = %s", (employee_id,))
-        salary_records = cursor.fetchall()
-        for record in salary_records:
-            st.write("Salary:", record[2])  # Display only the salary amount
-    except psycopg2.Error as e:
-        st.error(f"Error fetching salary records: {e}")
-
-def display_employee_attendance(employee_id):
-    # Display employee attendance based on ID
-    try:
-        cursor.execute("SELECT * FROM Attendance WHERE EmployeeID = %s", (employee_id,))
-        attendance_records = cursor.fetchall()
-        for record in attendance_records:
-            status = "Present" if record[2] == 1 else "Absent"
-            st.write("Attendance Status:", status)  # Display attendance status
-            st.write("Date:", record[1])  # Display date of attendance
-    except psycopg2.Error as e:
-        st.error(f"Error fetching attendance records: {e}")
+        with header_section:
+            if 'logged_in' not in st.session_state:
+                st.session_state['logged_in'] = False
+                st.session_state['page'] = 'login'
+            
+            if st.session_state.get('page') == 'login':
+                show_login_page()
+            elif st.session_state.get('page') == 'signup':
+                member_signup_page(cursor, conn)
+            elif st.session_state.get('page') == 'main':
+                show_main_page()
+                show_logout_page()
+            elif st.session_state.get('page') == 'member':
+                show_member_page(cursor, st.session_state['member_id'])
+                show_logout_page()
 
 if __name__ == "__main__":
     main()
