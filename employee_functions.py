@@ -57,12 +57,12 @@ def member_signup(cursor, conn, member_id, username, password):
 
         cursor.execute("INSERT INTO employee_credentials (id, username, password) VALUES (%s, %s, %s)", (member_id, username, password))
         conn.commit()
-        st.success("Member signed up successfully!")
+        st.success("Employee signed up successfully!")
         st.session_state['show_signup'] = False  # Reset the signup state
         return True
     except psycopg2.Error as e:
         conn.rollback()
-        st.error(f"Error signing up member: {e}")
+        st.error(f"Error signing up employee: {e}")
         return False
     
 def view_employee_information(cursor, employee_id):
