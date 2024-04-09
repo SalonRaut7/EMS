@@ -63,14 +63,14 @@ def show_login_page():
     st.write("Please log in to access the system.")  
     with login_section:
         if not st.session_state.get('logged_in', False):
-            user_type = st.radio("Login as", ["Admin", "Member"])
+            user_type = st.radio("Login as", ["Admin", "Employee"])
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
             if user_type == "Admin":
                 st.button("Login as Admin", on_click=admin_logged_in_clicked, args=(username, password))
             else:
-                st.button("Login as Member", on_click=member_logged_in_clicked, args=(username, password))
-                st.write("Not a member?")
+                st.button("Login as Employee", on_click=member_logged_in_clicked, args=(username, password))
+                st.write("Not an Employee?")
                 st.button("Sign Up", on_click=update_page_state, args=('signup',))
 
 # def update_page_state(new_page):
