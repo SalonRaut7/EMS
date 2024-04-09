@@ -68,7 +68,7 @@ def show_member_page(cursor, member_id):
 def member_signup_page(cursor, conn):
     with st.form("member_signup_form"):
         st.write("Employee Sign Up")
-        member_id = st.number_input("Member ID", min_value=1, step=1)
+        member_id = st.number_input("Employee ID", min_value=1, step=1)
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
         submit_button = st.form_submit_button("Sign Up")
