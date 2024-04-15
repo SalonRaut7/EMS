@@ -4,7 +4,7 @@ import streamlit as st
 import psycopg2
 
 def render_admin_interface(cursor, conn):
-    menu = st.sidebar.selectbox('Select an Operation', ('View Employees', 'Add Employee', 'View Departments', 'Add Department', 'View Salary', 'Add Salary', 'View Attendance', 'Add Attendance'))
+    menu = st.sidebar.selectbox('Select an Operation', ('View Employees', 'Add Employee', 'View Departments', 'Add Department', 'View Salary', 'Add Salary', 'View Attendance', 'Add Attendance', 'Update Employee', 'Delete Employee'))
 
     if menu == "View Employees":
         st.subheader("View Employees")
@@ -106,6 +106,31 @@ def render_admin_interface(cursor, conn):
             cursor.execute("INSERT INTO Attendance (EmployeeID, Date, Status) VALUES (%s, %s, %s)", (employee_id, date, status))
             conn.commit()
             st.success("Attendance record added successfully")
+        
+    elif menu == "Update Employee":
+        st.subheader("Update Employee Details")
+        employee_id = st.number_input("Enter Employee ID")
+        name = st.text_input("Name")
+        email = st.text_input("Email")
+        department_options = get_department_options(cursor)
+        department = st.selectbox("Department", department_options)
+        job_title = st.text_input("Job Title")
+        if st.button("Update"):
+            cursor.execute("UPDATE Employees SET Name = %s, Email = %s, Department = %s, JobTitle = %s WHERE EmployeeID = %s", (name, email, department, job_title, employee_id))
+            conn.commit()
+            st.success("Employee details updated successfully")
+        
+    elif menu == "Delete Employee":
+        st.subheader("Delete Employee")
+        employee_id = st.number_input("Enter Employee ID")
+        if st.button("Delete"):
+            # Delete associated attendance records first
+            cursor.execute("DELETE FROM Attendance WHERE EmployeeID = %s", (employee_id,))
+            conn.commit()
+            # Then delete the employee
+            cursor.execute("DELETE FROM Employees WHERE EmployeeID = %s", (employee_id,))
+            conn.commit()
+            st.success("Employee deleted successfully")
 
 def view_employee_attendance(cursor, employee_id):
     try:
