@@ -121,16 +121,25 @@ def render_admin_interface(cursor, conn):
             st.success("Employee details updated successfully")
         
     elif menu == "Delete Employee":
-        st.subheader("Delete Employee")
-        employee_id = st.number_input("Enter Employee ID")
-        if st.button("Delete"):
-            # Delete associated attendance records first
+    st.subheader("Delete Employee")
+    employee_id = st.number_input("Enter Employee ID")
+    if st.button("Delete"):
+        try:
+            # Delete associated salary records first
+            cursor.execute("DELETE FROM Salary WHERE EmployeeID = %s", (employee_id,))
+            conn.commit()
+            
+            # Then delete associated attendance records
             cursor.execute("DELETE FROM Attendance WHERE EmployeeID = %s", (employee_id,))
             conn.commit()
-            # Then delete the employee
+            
+            # Finally, delete the employee
             cursor.execute("DELETE FROM Employees WHERE EmployeeID = %s", (employee_id,))
             conn.commit()
+            
             st.success("Employee deleted successfully")
+        except psycopg2.Error as e:
+            st.error(f"Error deleting employee: {e}")
 
 def view_employee_attendance(cursor, employee_id):
     try:
