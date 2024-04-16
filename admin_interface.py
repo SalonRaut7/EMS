@@ -110,15 +110,29 @@ def render_admin_interface(cursor, conn):
     elif menu == "Update Employee":
         st.subheader("Update Employee Details")
         employee_id = st.number_input("Enter Employee ID")
-        name = st.text_input("Name")
-        email = st.text_input("Email")
-        department_options = get_department_options(cursor)
-        department = st.selectbox("Department", department_options)
-        job_title = st.text_input("Job Title")
+        field_to_update = st.selectbox("Select Field to Update", ("Name", "Email", "Department", "Job Title"))
+        new_value = None
+
+        if field_to_update == "Name":
+            new_value = st.text_input("New Name")
+        elif field_to_update == "Email":
+            new_value = st.text_input("New Email")
+        elif field_to_update == "Department":
+            department_options = get_department_options(cursor)
+            new_value = st.selectbox("New Department", department_options)
+        elif field_to_update == "Job Title":
+            new_value = st.text_input("New Job Title")
+
         if st.button("Update"):
-            cursor.execute("UPDATE Employees SET Name = %s, Email = %s, Department = %s, JobTitle = %s WHERE EmployeeID = %s", (name, email, department, job_title, employee_id))
-            conn.commit()
-            st.success("Employee details updated successfully")
+            if new_value is not None:
+                if field_to_update == "Department":
+                    cursor.execute(f"UPDATE Employees SET {field_to_update} = %s WHERE EmployeeID = %s", (new_value, employee_id))
+                else:
+                    cursor.execute(f"UPDATE Employees SET {field_to_update.replace(' ', '')} = %s WHERE EmployeeID = %s", (new_value, employee_id))
+                conn.commit()
+                st.success("Employee details updated successfully")
+            else:
+                st.warning("Please select a field and provide a new value.")
         
     elif menu == "Delete Employee":
     st.subheader("Delete Employee")
