@@ -1,7 +1,42 @@
-# EMS
-Employee Management System using Streamlit and Postgresql
-Features:
-1. Login system for admin, employee
-2. Sign Up for employee
-3. Admin can use following functionalities: View employee, Add employee, View Department, Add Department, View Salary, Add Salary, View Attendence, Add Attendence, Update employee, Delete employee.
-4. User can view his/her details.
+# Employee Management System
+
+## Overview
+
+The Employee Management System is a web application built using Streamlit and PostgreSQL. It provides a robust interface for managing employee data, including functionalities for both administrators and employees.
+
+## Features
+
+### For Admin:
+- **Login System**: Admin can log in to access management functionalities.
+- **Employee Management**:
+  - View employee details
+  - Add new employees
+  - Update employee information
+  - Delete employees
+- **Department Management**:
+  - View departments
+  - Add new departments
+- **Salary Management**:
+  - View salary details
+  - Add salary records
+- **Attendance Management**:
+  - View attendance records
+  - Add attendance records
+
+### For Employees:
+- **User Login**: Employees can log in to view their personal details.
+
+## Installation
+
+### Prerequisites
+- Python 3.x
+- PostgreSQL
+- Streamlit
+- `psycopg2` for PostgreSQL integration
+
+
+### You can clone the repo as:
+**Clone the Repository**
+   ```bash
+   git clone https://github.com/yourusername/employee-management-system.git
+   cd employee-management-system
