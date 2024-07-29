@@ -34,9 +34,7 @@ The Employee Management System is a web application built using Streamlit and Po
 - Streamlit
 - `psycopg2` for PostgreSQL integration
 
-
-### You can clone the repo as:
 **Clone the Repository**
    ```bash
    git clone https://github.com/yourusername/employee-management-system.git
-   cd employee-management-system
+   
